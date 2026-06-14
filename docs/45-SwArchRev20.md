@@ -1,343 +1,397 @@
-# Continue ARI V1
-
-## IMPORTANT GOVERNANCE RULES
-
-Before writing this document:
-
-1. Frozen Documents are the Source of Truth.
-2. Do NOT invent new architecture that conflicts with frozen documents.
-3. Do NOT silently change scope, terminology, UX, data model, workflow, governance model, or platform architecture.
-4. If a new idea emerges, label it clearly as:
-
-   * Future Enhancement
-   * Optional Extension
-   * Revision Proposal
-5. Do NOT modify previous frozen decisions unless explicitly requested.
-6. Think carefully within the scope of this document only.
-7. Consistency with previous documents is more important than creativity.
-
----
-
 # Project
 
-ARI = Agricultural Intelligence Platform
+ARI — Agricultural Intelligence Platform
+
+# Document Number
+
+#45
+
+# Document Title
+
+Software Architecture & Monorepo Specification rev2.0
+
+# Export Mode
+
+Target Document Reconstruction Export
+
+# Human Verification Required
+
+YES
+
+# Status
+
+DRAFT until reviewed by project owner
 
 ---
 
-# Mission
+# Reconstruction Notes
 
-Building the Digital Twin,
-Knowledge Layer,
-Intelligence Layer,
-Evidence Layer,
-Trust Layer,
-and Commerce Layer
-of Agriculture.
+This reconstruction is based only on content explicitly confirmed within the available conversation history.
 
----
-
-# Vision
-
-Create the Intelligence and Trust Infrastructure
-for Global Agriculture.
-
----
-
-# Core Principles
-
-1. Digital Twin First
-2. Evidence-Based Decision Making
-3. Human-AI Collaboration
-4. Explainable Intelligence
-5. Farm-to-Consumer Traceability
-6. Modular & Scalable Architecture
-7. Knowledge Reuse & Continuous Learning
-8. Economic Value Creation
-9. Sustainability & Global Compliance
-10. Evidence First
-11. Trust as Infrastructure
-12. Compliance Ready by Design
-13. Progressive Adoption
-
----
-
-# Current Frozen Documents
-
-## Phase 1 : Foundation Layer
-
-### #1-18 Complete
-
-Status: FROZEN
-
----
-
-## Phase 2 : Intelligence Layer
-
-### #19-36B-D Complete
-
-Status: FROZEN
-
----
-
-## Commerce Layer
-
-### #35 Revision 1.1
-
-Agri Commerce & Market Intelligence
-
-Status: READY FOR FREEZE
-
----
-
-## Governance Layer
-
-### #43 Robot Authority Model
-
-Status: FROZEN
-
----
-
-## Product & Platform Layer
-
-### #45 Revision 2.0
-
-Software Architecture & Monorepo Specification
-
-Status: FROZEN
-
-### #46 MVP Software Build Plan
-
-Status: FROZEN
-
-### #46A Mobile Platform UX
-
-Status: FROZEN
-
-### #46B Web Platform UX
-
-Status: FROZEN
-
----
-
-# New Document
-
-# ARI V1 #44
-
-## Farm AI Operating System (Farm AIOS)
+Where the original #45 content was not present in the conversation, items are placed under **Unverified / Needs Human Review**.
 
 ---
 
 # Objective
 
-Define the conceptual operating system that coordinates:
+Transform frozen ARI business architecture into a production-grade software architecture supporting:
 
-* Humans
-* AI Agents
-* Evidence
-* Knowledge
-* Intelligence
-* Trust
-* Compliance
-* Commerce
-* Future Robotics
-
-inside a single farm intelligence platform.
-
-Farm AIOS is a logical operating model and governance framework.
-
-It is NOT:
-
-* A mobile app
-* A web app
-* A robot operating system
-* A replacement for ROS2
-* A replacement for Linux
-
-Farm AIOS is the orchestration layer above the ARI platform.
+```text
+Digital Twin
+↓
+Evidence Layer
+↓
+Knowledge Layer
+↓
+Intelligence Layer
+↓
+Trust Layer
+↓
+Commerce Layer
+↓
+Mobile / Web Applications
+↓
+AI Agents
+↓
+Future Robotics
+```
 
 ---
 
-# Required Outputs
+# Unified Platform Architecture
 
-## Part A — Farm AIOS Mission
+ARI shall be implemented as a single unified platform consisting of:
 
-Define:
+* One Mobile Application
+* One Web Platform
+* One Backend Platform
+* One Database Architecture
+* One Domain Model
+* One RBAC System
 
-* Why Farm AIOS exists
-* What problems it solves
-* Relationship with ARI Mission and Vision
+Mobile App and Web Platform are different presentation interfaces of the same platform.
 
----
+Access to features, menus, consoles, workflows, and data shall be controlled by:
 
-## Part B — Farm AIOS Core Layers
+* Role-Based Access Control (RBAC)
+* Permissions
+* Assigned Work
+* Organization Scope
+* Farm Scope
+* Feature Flags
+* Progressive Adoption Level
 
-Define responsibilities and interactions between:
+ARI shall not create separate applications for:
 
-1. Digital Twin Layer
-2. Evidence Layer
-3. Knowledge Layer
-4. Intelligence Layer
-5. Trust Layer
-6. Compliance Layer
-7. Commerce Layer
-8. Human Layer
-9. AI Agent Layer
-10. Future Robotics Layer
+* Farmers
+* Agronomists
+* Reviewers
+* ARI Staff
+* Admins
+* Other user groups
 
----
+All users operate on the same platform and share the same underlying:
 
-## Part C — Operating Model
-
-Define how information flows through:
-
-Observation
-
-↓
-
-Evidence
-
-↓
-
-Knowledge
-
-↓
-
-Intelligence
-
-↓
-
-Recommendation
-
-↓
-
-Decision
-
-↓
-
-Action
-
-↓
-
-Outcome
-
-↓
-
-Learning
+* Data Architecture
+* Evidence Architecture
+* Knowledge Architecture
+* Trust Architecture
+* Compliance Architecture
+* Commerce Architecture
 
 ---
 
-## Part D — Human-AI Collaboration Model
+# Platform Architecture Principles
 
-Define:
+## One Platform
 
-* Human roles
-* AI roles
-* Review points
-* Escalation points
-* Human-in-the-loop requirements
+```text
+ARI Platform
 
-Must remain consistent with:
+├─ Mobile App
+└─ Web Platform
+```
 
-* #39 Autonomous Decision Framework
-* #40 Decision Governance Layer
-* #41 Human-in-the-Loop Policy
+Both interfaces share:
+
+```text
+Backend
+Database
+Domain Model
+RBAC
+Evidence Layer
+Knowledge Layer
+Trust Layer
+Commerce Layer
+```
+
+---
+
+## Mobile = Work Anywhere
+
+Primary characteristics:
+
+* Field operation
+* Evidence capture
+* Ask AI
+* Follow-up
+* Notification handling
+* Quick review
+* Quick approval
+* Mobile-first operation
+
+---
+
+## Web = Work Deep
+
+Primary characteristics:
+
+* Review
+* Analysis
+* Search
+* Knowledge preparation
+* Administration
+* Reporting
+* Deep workflow execution
+
+---
+
+## RBAC-Based Access
+
+ARI shall use:
+
+```text
+Single Application
+Single Platform
+Role-Based Access
+```
+
+User experience varies according to:
+
+* Role
+* Permission
+* Assigned Work
+* Organization Scope
+* Farm Scope
+* Feature Flags
+
+---
+
+# Mobile Platform Relationship
+
+Reference:
+
+```text
+#46A Mobile Platform UX
+```
+
+P0 Mobile UX remains the Digital Farm Notebook experience.
+
+Farmer base experience:
+
+* Ask AI
+* Add Record
+* Farm Notebook
+* Notifications
+* Profile
+
+Additional role-based functionality may be exposed through RBAC.
+
+No separate mobile applications shall be created.
+
+---
+
+# Web Platform Relationship
+
+Reference:
+
+```text
+#46B Web Platform UX
+```
+
+Web Platform serves as the deep-work interface of the same ARI platform.
+
+Role-based consoles and workflows are controlled through RBAC.
+
+No separate web platforms shall be created.
+
+---
+
+# P0 Scope (Confirmed)
+
+Architecture supports:
+
+* Mobile Platform
+* Web Platform
+* Backend Platform
+* RBAC
+* Evidence Layer
+* Knowledge Preparation
+* Review Workflow
+* AI Session Workflow
+* Farm Notebook Workflow
+
+P0 focuses on:
+
+```text
+Capture
+Review
+Search
+Follow-up
+Administration
+```
+
+---
+
+# Future Architecture (Confirmed Direction)
+
+Reserved for later phases:
+
+* Trust Layer Expansion
+* Compliance Layer Expansion
+* Commerce Layer Expansion
+* AI Operations
+* Robot Operations
+* Farm AIOS Integration
+* Advanced Intelligence Modules
+
+---
+
+# Relationship to Other Documents
+
+This document serves as the software architecture foundation for:
+
 * #43 Robot Authority Model
+* #44 Farm AI Operating System (Farm AIOS)
+* #46 MVP Software Build Plan
+* #46A Mobile Platform UX
+* #46B Web Platform UX
+* #47 AI Agent Development Workflow
 
 ---
 
-## Part E — Agent Ecosystem
+# Unverified / Needs Human Review
 
-Define high-level categories only:
+The following sections were referenced during #45 discussions but the finalized content was not available in the reconstruction source:
 
-* Observation Agents
-* Evidence Agents
-* Knowledge Agents
-* Intelligence Agents
-* Trust Agents
-* Commerce Agents
+## System Architecture
 
-Do NOT design individual agents yet.
+* Presentation Layer
+* Application Layer
+* Domain Layer
+* Data Layer
+* Infrastructure Layer
+* AI Layer
+* Integration Layer
 
-Detailed agent development belongs to #47.
+## Core Domains
 
----
+* Farm Domain
+* Identity Domain
+* Tree Domain
+* Fruit Domain
+* Evidence Domain
+* Knowledge Domain
+* Intelligence Domain
+* Trust Domain
+* Commerce Domain
+* Compliance Domain
+* Sustainability Domain
+* AI Agent Domain
+* Robot Domain
 
-## Part F — Authority & Decision Model
+## Bounded Context Design
 
-Define:
+* Ownership
+* Responsibilities
+* Inter-domain Communication
 
-* Who can observe
-* Who can recommend
-* Who can approve
-* Who can execute
-* Who can override
-* Who is accountable
+## Monorepo Structure
 
-Must remain consistent with #43.
+* apps/
+* services/
+* packages/
+* agents/
+* infra/
+* data-models/
+* shared/
+* docs/
+* tools/
 
----
+## Data Architecture
 
-## Part G — Farm AIOS Runtime Loop
+* PostgreSQL Design
+* TimescaleDB Design
+* MinIO Design
+* Knowledge Graph Design
 
-Define the continuous learning loop of ARI:
+## AI Architecture
 
-Observe
+* Agent Platform
+* LLM Routing
+* RAG
+* Vector Database
 
-↓
+## Infrastructure Architecture
 
-Record
+* Deployment Models
+* Hybrid Edge / Cloud Architecture
+* Security Architecture
+* Observability
 
-↓
+## Development Architecture
 
-Verify
+* Git Strategy
+* CI/CD
+* Testing
+* Release Management
 
-↓
+These sections require verification against the original #45 Revision 2.0 source document before final freeze.
 
-Learn
 
-↓
+    ----------------------------------------
+    After Owner Reviewed : Freeze 
+    Reviewed by          : owner 
+    Reviewed date        : 2026-06-14
+    ----------------------------------------
 
-Recommend
 
-↓
+รับทราบครับ
 
-Act
+สถานะล่าสุด:
 
-↓
+Project: ARI — Agricultural Intelligence Platform
 
-Measure
+Document Number: #45
 
-↓
+Document Title:
+Software Architecture & Monorepo Specification rev2.0
 
-Improve
+Status: FROZEN
 
----
+Freeze Date:
+Confirmed by Project Owner
 
-## Part H — Relationship to Existing Documents
+Notes:
+- Unified Platform Architecture included.
+- One Mobile App + One Web Platform + One Backend Platform.
+- One Domain Model + One RBAC System.
+- Mobile = Work Anywhere.
+- Web = Work Deep.
+- RBAC governs visibility, permissions, workflows, and consoles.
+- No separate applications for different user groups.
+- Frozen document becomes Source of Truth for subsequent documents.
 
-Explain how Farm AIOS integrates:
+สำหรับเอกสารถัดไปตาม Roadmap:
 
-* #19-36 Intelligence Documents
-* #35 Commerce
-* #43 Robot Authority Model
-* #45 Software Architecture
-* #46A Mobile UX
-* #46B Web UX
+#44 Farm AI Operating System (Farm AIOS)
 
-without changing any frozen architecture.
+และ #44 ต้องสอดคล้องกับ:
 
----
+#43 Robot Authority Model (FROZEN)
+#45 Software Architecture & Monorepo Specification rev2.0 (FROZEN)
+#46 MVP Software Build Plan (FROZEN)
+#46A Mobile Platform UX (FROZEN)
+#46B Web Platform UX (FROZEN)
 
-# Final Deliverables
-
-Produce:
-
-1. Farm AIOS Definition
-2. Farm AIOS Layer Architecture
-3. Human-AI Collaboration Model
-4. Authority Model Integration
-5. Operating Loop
-6. Agent Ecosystem Overview
-7. Relationship to Existing ARI Documents
-
-The goal is to define the conceptual operating system of ARI before proceeding to #47 AI Agent Development Workflow.
+โดยห้ามเปลี่ยน Architecture ที่ Freeze แล้ว และหากมีแนวคิดใหม่ต้องระบุเป็น Future Enhancement, Optional Extension หรือ Revision Proposal เท่านั้น.
