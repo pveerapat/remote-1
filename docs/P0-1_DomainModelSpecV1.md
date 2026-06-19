@@ -1052,3 +1052,156 @@ ARI V1 — P0 Domain Model Specification v1.0
 This document must not be used to replace the frozen P0 Domain Model v1.0.
 
 Any future changes must be recorded as a new additive revision or formal revision proposal.
+
+
+***********************
+update 2026-06-19
+***********************
+
+ARI V1 — P0 Domain Model Additive Revision v1.1
+Status
+FROZEN
+Base Document
+ARI V1 — P0 Domain Model Specification v1.0
+Status: FROZEN
+Freeze Scope
+
+เอกสารนี้เป็น Additive Revision ของ P0 Domain Model v1.0 โดยแก้เฉพาะส่วน:
+
+User Domain Model
+
+เพื่อรองรับ P1-2 Mobile Onboarding
+
+Frozen Additions
+
+เพิ่ม field ต่อไปนี้ใน User Domain:
+
+phone
+
+farmer_status
+
+membership_status
+
+account_status
+
+primary_farm_id
+Frozen Domain Rules
+1. Phone
+phone = Primary Login Identity
+
+ใช้รองรับ mobile self-registration และ phone-based login
+
+2. Farmer Status
+farmer_status:
+- owner
+- owner_family
+- farm_staff
+
+กฎสำคัญ:
+
+farmer_status ≠ RBAC role
+3. Membership Status
+membership_status:
+- pending_farm_approval
+- active
+- rejected
+- suspended
+- revoked
+
+ใช้ควบคุม lifecycle ของ farm membership
+
+4. Account Status
+account_status:
+- active
+- active_pending_verification
+- pending_review
+- suspended
+- rejected
+- revoked
+
+ใช้ควบคุม lifecycle ของ account
+
+5. Primary Farm
+primary_farm_id
+
+ใช้เป็น default farm context สำหรับ:
+
+owner_family
+farm_staff
+
+และอาจเป็น null ได้
+
+Frozen Onboarding Rules
+Owner
+farmer_status = owner
+
+แล้ว:
+
+membership_status = active
+
+Owner สามารถสร้าง:
+
+Farm
+
+ภายใต้ Organization ของตนเอง
+
+Owner Family
+farmer_status = owner_family
+
+ต้องมี:
+
+Farm ID
+
+และเริ่มต้นด้วย:
+
+membership_status = pending_farm_approval
+
+ระบบต้อง resolve:
+
+organization_id
+
+จาก Farm ID
+
+Farm Staff
+farmer_status = farm_staff
+
+ต้องมี:
+
+Farm ID
+
+และเริ่มต้นด้วย:
+
+membership_status = pending_farm_approval
+
+ระบบต้อง resolve:
+
+organization_id
+
+จาก Farm ID
+
+Frozen Non-Changes
+
+เอกสารนี้ ไม่เพิ่ม:
+
+Owner Registry
+
+Member Registry
+
+Farmer Registry
+
+Farm Membership Entity
+
+Permission Entity
+
+New RBAC Role
+
+New Mobile App
+
+New Web App
+
+New Backend Service
+
+New Database Architecture
+Correct Current Status
+ARI V1 — P0 Domain Model Additive Revision v1.1
+Status: FROZEN
