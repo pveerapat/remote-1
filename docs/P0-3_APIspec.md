@@ -3612,3 +3612,412 @@ Commerce API
 This revision only extends authentication, user state exposure, farm creation behavior, and mobile onboarding API support.
 
 
+*********************
+Freeze
+*********************
+
+# ARI V1 — P0 API Specification Additive Revision v1.1
+
+## Freeze Record
+
+### Freeze Status
+
+```text
+FROZEN
+```
+
+### Freeze Date
+
+```text
+2026-06-19
+```
+
+---
+
+# Parent Documents
+
+This additive revision is attached to:
+
+```text
+ARI V1 — P0 API Specification v1.0
+```
+
+Status:
+
+```text
+FROZEN
+```
+
+---
+
+# Dependency Documents
+
+This revision assumes compatibility with:
+
+```text
+ARI V1 — P0 Domain Model Additive Revision v1.1
+
+ARI V1 — P0 Database Schema Additive Revision v1.1
+```
+
+and does not replace them.
+
+---
+
+# Approved Corrections Before Freeze
+
+## Primary Farm Identifier
+
+Replace all examples using:
+
+```text
+primary_farm_id = "ARI-FARM-A123"
+```
+
+with:
+
+```text
+primary_farm_id = "uuid"
+```
+
+Example:
+
+```json
+{
+  "user_id": "uuid",
+  "phone": "0812345678",
+  "role": "farmer",
+  "farmer_status": "farm_staff",
+  "organization_id": "uuid",
+  "primary_farm_id": "uuid",
+  "membership_status": "pending_farm_approval",
+  "access_token": "jwt",
+  "refresh_token": "jwt"
+}
+```
+
+Farm display code may remain:
+
+```text
+ARI-FARM-A123
+```
+
+as:
+
+```text
+farm_code
+```
+
+only.
+
+---
+
+# Frozen Additive Scope
+
+## Authentication
+
+Added:
+
+```http
+POST /api/v1/auth/register
+```
+
+Revised:
+
+```http
+POST /api/v1/auth/login
+```
+
+Supports:
+
+```text
+phone login
+```
+
+Required for:
+
+```text
+P1-2 Mobile Onboarding
+```
+
+---
+
+## Auth Me
+
+Expanded payload:
+
+```text
+phone
+
+farmer_status
+
+membership_status
+
+primary_farm_id
+
+account_status
+```
+
+---
+
+## User API Exposure
+
+Allowed user state exposure:
+
+```text
+phone
+
+farmer_status
+
+membership_status
+
+primary_farm_id
+
+account_status
+```
+
+---
+
+## Owner Registration Flow
+
+Supported:
+
+```text
+owner
+```
+
+Behavior:
+
+```text
+Create User
+
+Assign Role = farmer
+
+Create / Assign Organization
+
+Allow Farm Creation
+```
+
+---
+
+## Owner Family Registration Flow
+
+Supported:
+
+```text
+owner_family
+```
+
+Behavior:
+
+```text
+Require Farm ID
+
+Resolve Organization
+
+Pending Approval
+```
+
+---
+
+## Farm Staff Registration Flow
+
+Supported:
+
+```text
+farm_staff
+```
+
+Behavior:
+
+```text
+Require Farm ID
+
+Resolve Organization
+
+Pending Approval
+```
+
+---
+
+## Membership Lifecycle
+
+Supported values:
+
+```text
+pending_farm_approval
+
+active
+
+rejected
+
+suspended
+
+revoked
+```
+
+---
+
+## Farm Creation Payload
+
+Farm API supports:
+
+```json
+{
+  "farm_name": "...",
+  "location": {},
+  "description": "..."
+}
+```
+
+with structured location payload.
+
+---
+
+## Farm Location Payload
+
+Supported fields:
+
+```text
+province
+
+district
+
+subdistrict
+
+address
+
+gps_latitude
+
+gps_longitude
+
+source
+```
+
+---
+
+# Explicit Non-Changes
+
+This revision does NOT introduce:
+
+```text
+Owner Registry
+
+Member Registry
+
+Farmer Registry
+
+Farm Membership Table
+
+Permission Service
+
+Permission Table
+
+QR Registry
+
+Consultation Entity
+
+Knowledge API
+
+Robot API
+
+Commerce API
+```
+
+---
+
+# Existing Frozen Decisions Preserved
+
+```text
+Consultation
+=
+Notebook Entry Type
+```
+
+```text
+QR
+=
+Representation Only
+```
+
+```text
+Upload
+=
+MinIO Presigned Upload
+```
+
+```text
+Sync
+=
+sync/batch
+```
+
+```text
+Follow-Up
+=
+3 / 7 / 14 Day Model
+```
+
+```text
+Search
+=
+Keyword / Filter Search Only
+```
+
+---
+
+# Architectural Compliance
+
+This additive revision remains compliant with:
+
+```text
+One Platform
+
+One Backend
+
+One Database Architecture
+
+One Mobile App
+
+One Web App
+
+One Domain Model
+
+One RBAC System
+```
+
+---
+
+# Final Status
+
+```text
+ARI V1 — P0 API Specification v1.0
+FROZEN
+
+ARI V1 — P0 API Specification Additive Revision v1.1
+FROZEN
+```
+
+---
+
+# Governance Note
+
+Future onboarding changes that require:
+
+```text
+new entities
+new tables
+new RBAC roles
+new services
+```
+
+must be processed through:
+
+```text
+Domain Revision
+→ Database Revision
+→ API Revision
+→ Implementation Revision
+```
+
+and must not modify this frozen revision directly.
