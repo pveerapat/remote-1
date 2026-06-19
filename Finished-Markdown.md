@@ -21,6 +21,7 @@ Finished Markdown Documents No.
 22---> 30       
 35-> 35A-> 35B-> 36-> 36A-> 36B-> 36B_C-> 36B_D-> 
 
-46-> 46A -> 46B(เปลี่ยนแนวเริ่มทำ P0)-> 35rev1.1-> 45-> 44-> 47 -> P0-Domain model spec.V1.0 -> P0 Database Schema Spec.V1.0
+46-> 46A -> 46B(เปลี่ยนแนวเริ่มทำ P0)-> 35rev1.1-> 45-> 44-> 47 -> P0-Domain model spec.V1.0 -> P0 Database Schema Spec.V1.0 -> 
+   P0-API -> P1-1 Backend v1.0 -> P1-2 Mobile app v1.0 -->> P0-Domain Rev1.1 -->> P0-Database Rev1.1 -->> P1-1 Backend Rev1.1 -->> P1-2 Mobile Rev1.1 -> P1-2 Web App
 
 #37-#43 ยังไม่ได้ทำ
