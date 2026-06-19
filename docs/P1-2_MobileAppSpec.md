@@ -8,9 +8,9 @@ Document Title: ARI V1 — P1-2 Mobile App Implementation Specification v1.0
 
 Version: v1.0
 
-Status: Draft Revised with Section 36 / Ready for Owner Review
+Status: Draft Final / Ready for Freeze
 
-Freeze Readiness: Not Yet — Backend/API Revision Required Before Freeze
+Freeze Readiness: Ready for Owner Freeze Approval
 
 Scope: Flutter Mobile App Implementation Specification
 
@@ -38,7 +38,7 @@ Desktop App Scope
 
 ### 1.1 Source of Truth
 
-This document follows the frozen ARI documents:
+This document follows the frozen and approved ARI documents:
 
 ```text
 #44 Farm AI Operating System
@@ -53,7 +53,18 @@ ARI V1 — P0 API Specification v1.0
 ARI V1 — P1-1 Backend Implementation Specification v1.0
 ```
 
-### 1.2 Frozen Baseline Dependencies
+### 1.2 Dependency Status
+
+Dependency status for this P1-2 freeze review:
+
+```text
+P0 Domain Model Additive Revision: Confirmed
+P0 Database Schema Additive Revision: Confirmed
+P0 API Additive Revision: Confirmed
+P1-1 Backend Additive Revision: Confirmed
+```
+
+### 1.3 Frozen Baseline Dependencies
 
 The following frozen baseline decisions remain unchanged:
 
@@ -83,9 +94,9 @@ Capture First
 Structure Later
 ```
 
-### 1.3 Owner-Approved Revision Requirements
+### 1.4 Owner-Approved Mobile Onboarding Decisions
 
-The following decisions were added during P1-2 review and must be treated as formal revision requirements to P0 API / P1-1 Backend before coding:
+The following Owner-approved decisions are supported by the approved additive revisions to P0 Domain Model, P0 Database Schema, P0 API, and P1-1 Backend, and are included as part of P1-2 Mobile implementation scope:
 
 ```text
 Mobile self-registration
@@ -110,7 +121,18 @@ Web App moved to P1-3
 Desktop App out of scope
 ```
 
-These revision requirements must not create a separate platform, separate app, new RBAC role, permission service, owner registry, QR registry, or consultation entity.
+These decisions must not create:
+
+```text
+Separate platform
+Separate mobile app
+New RBAC role
+Permission service
+Owner registry
+QR registry
+Consultation entity
+New database architecture
+```
 
 ---
 
@@ -621,23 +643,22 @@ No feature may require a separate backend.
 
 ## 7. Account Registration and Phone Login
 
-### 7.1 Revision Requirement
+### 7.1 Backend/API Dependency
 
-This section is an Owner-approved revision requirement.
-
-Frozen P0 API originally defined login by email/password and admin/root user creation.
-
-P1-2 requires:
+This section uses the approved P0 API / P1-1 Backend additive revision contracts for:
 
 ```text
 Mobile self-registration
-Phone number as platform-wide login ID
-Password login
-JWT token response
-Offline use after first successful login
+Phone-number login
+farmer_status
+membership_status
+account_status
+primary_farm_id
+Farm ID join behavior
+Owner organization assignment
 ```
 
-Backend/API must support this before coding.
+P1-2 mobile must use those approved contracts consistently.
 
 ### 7.2 Login ID Rule
 
@@ -659,7 +680,7 @@ Future Web App in P1-3
 
 Mobile must normalize phone number before submitting.
 
-Acceptable format must be fixed by backend/API.
+Acceptable format must follow the approved backend/API rule.
 
 Recommended display examples:
 
@@ -739,9 +760,9 @@ Recommended but not required for P1-2:
 After first successful login, app should encourage user to change password.
 ```
 
-### 7.6 Registration API Requirement
+### 7.6 Registration API
 
-Required API revision:
+Approved API:
 
 ```text
 POST /api/v1/auth/register
@@ -800,11 +821,11 @@ farmer_status = owner_family
 farmer_status = farm_staff
 ```
 
-### 8.2 Backend/API Revision Required
+### 8.2 Backend/API Dependency
 
-`farmer_status` must be persisted by backend.
+`farmer_status` must be persisted and returned by the approved backend/API contract.
 
-Recommended minimal additive backend change:
+Approved minimal additive field:
 
 ```text
 users.farmer_status nullable
@@ -812,7 +833,7 @@ users.farmer_status nullable
 
 or equivalent approved storage in the existing user/profile model.
 
-This must be processed as formal DB/API revision before coding.
+This is supported by the approved additive DB/API revision and must be used consistently by mobile.
 
 ### 8.3 Owner
 
@@ -950,9 +971,9 @@ Mobile opens Create Farm flow
 
 ### 9.2 Organization Rule
 
-Because `organization_id` is required for ARI records, backend should create or assign `organization_id` immediately after owner registration.
+Because `organization_id` is required for ARI records, backend creates or assigns `organization_id` immediately after owner registration.
 
-Recommended policy:
+Approved policy:
 
 ```text
 Owner registration creates/assigns organization_id immediately.
@@ -982,6 +1003,7 @@ Allowed statuses:
 
 ```text
 active
+active_pending_verification
 pending_review
 suspended
 rejected
@@ -1064,7 +1086,7 @@ Thai:
 
 ### 10.4 Membership Status
 
-Backend/API revision should support:
+Backend/API supports:
 
 ```text
 pending_farm_approval
@@ -1076,7 +1098,7 @@ revoked
 
 ### 10.5 Minimal P1-2 Membership Storage
 
-Recommended minimal P1-2 backend revision:
+Approved minimal P1-2 backend dependency:
 
 ```text
 users.primary_farm_id nullable
@@ -1129,10 +1151,10 @@ API:
 POST /api/v1/auth/login
 ```
 
-Revision requirement:
+P1-2 mobile login uses:
 
 ```text
-Login accepts phone number + password.
+phone number + password
 ```
 
 Mobile flow:
@@ -1605,12 +1627,6 @@ API Calls:
 
 ```text
 POST /api/v1/farms
-```
-
-Backend/API revision required:
-
-```text
-Self-registered farmer owner can create farm under own organization.
 ```
 
 Offline Behavior:
@@ -2215,24 +2231,29 @@ to request joining the farm.
 
 ### 16.7 Farm Location Storage
 
-Backend/API revision must clarify storage of location.
+Mobile must use the approved `farms.location` storage strategy from P0 Database / P0 API.
 
-Recommended approach:
+Preferred implementation:
 
 ```text
-farms.location supports structured object:
+farms.location JSONB/object
+```
+
+Supported structure:
+
+```json
 {
   "province": "...",
   "district": "...",
   "subdistrict": "...",
   "address": "...",
-  "gps_latitude": ...,
-  "gps_longitude": ...,
+  "gps_latitude": 0.0,
+  "gps_longitude": 0.0,
   "source": "device_gps|manual"
 }
 ```
 
-If backend only supports text location, mobile may serialize the location summary into `location` or `description` only if approved.
+If backend only supports text location in a specific implementation, mobile may serialize the location summary into `location` or `description` only if explicitly approved.
 
 ---
 
@@ -3075,11 +3096,11 @@ Before coding starts:
 [ ] farmer_status defined: owner / owner_family / farm_staff.
 [ ] farmer_status confirmed as status, not new RBAC role.
 [ ] membership_status defined.
-[ ] users.farmer_status backend revision recorded.
-[ ] users.membership_status backend revision recorded.
-[ ] users.primary_farm_id backend revision recorded if used.
-[ ] POST /api/v1/auth/register revision recorded.
-[ ] Login by phone backend revision recorded.
+[ ] users.farmer_status backend dependency confirmed.
+[ ] users.membership_status backend dependency confirmed.
+[ ] users.primary_farm_id backend dependency confirmed if used.
+[ ] POST /api/v1/auth/register confirmed.
+[ ] Login by phone confirmed.
 [ ] Default password 1234 limited to P0 pilot.
 [ ] Password hash only.
 [ ] First login requires internet.
@@ -3138,37 +3159,37 @@ Before coding starts:
 
 ---
 
-## 33. Required Backend/API Revision Checklist
+## 33. Confirmed Backend/API Dependency Checklist
 
-The following must be reflected in P0 API / P1-1 Backend revision before P1-2 Freeze:
+The following dependencies are confirmed as part of the approved P0 API / P1-1 Backend additive revision path and must be used consistently by P1-2 mobile:
 
 ```text
-[ ] Add POST /api/v1/auth/register.
-[ ] Allow login by phone number.
-[ ] Define phone normalization and uniqueness.
-[ ] Define farmer_status:
+[ ] Confirm POST /api/v1/auth/register exists in P0 API revision.
+[ ] Confirm login by phone number exists in P0 API revision.
+[ ] Confirm phone normalization and uniqueness rules exist.
+[ ] Confirm farmer_status exists:
     owner
     owner_family
     farm_staff
-[ ] Define membership_status:
+[ ] Confirm membership_status exists:
     pending_farm_approval
     active
     rejected
     suspended
     revoked
-[ ] Define owner registration behavior:
+[ ] Confirm owner registration behavior:
     create/assign organization_id immediately.
-[ ] Define family/staff registration behavior:
+[ ] Confirm family/staff registration behavior:
     require Farm ID.
-[ ] Define Farm ID validation.
-[ ] Define minimal membership storage:
+[ ] Confirm Farm ID validation.
+[ ] Confirm minimal membership storage:
     users.primary_farm_id or approved equivalent.
-[ ] Define whether owner can create farm through existing POST /api/v1/farms.
-[ ] Define structured farms.location or approved storage strategy.
+[ ] Confirm owner can create farm through POST /api/v1/farms.
+[ ] Confirm approved farms.location storage strategy.
 [ ] Confirm no new RBAC roles.
 [ ] Confirm no permission service.
 [ ] Confirm no owner registry.
-[ ] Confirm no farm_memberships table in P1-2 unless explicitly revised.
+[ ] Confirm no farm_memberships table in P1-2 unless explicitly revised later.
 ```
 
 ---
@@ -3306,10 +3327,10 @@ Consultation Entity
 Current Status:
 
 ```text
-Draft Revised
+Draft Final
 Owner Decisions Integrated
-Backend/API Revision Required Before Freeze
-Freeze Readiness: Not Yet
+Backend/API Additive Revisions Confirmed
+Freeze Readiness: Ready for Owner Freeze Approval
 ```
 
 ---
@@ -3318,13 +3339,13 @@ Freeze Readiness: Not Yet
 
 ### 36.1 Purpose
 
-This section records the cross-document impact of Owner-approved P1-2 decisions that affect frozen backend/API documents.
+This section records the cross-document impact of Owner-approved P1-2 decisions that affect backend/API implementation contracts.
 
 This section does not create a new ARI document.
 
 This section does not create a new source of truth.
 
-This section is a revision impact note that must be reflected in the relevant frozen documents before P1-2 can be frozen.
+This section confirms that P1-2 mobile implementation must remain aligned with the approved additive revisions in the affected documents.
 
 ### 36.2 Affected Documents
 
@@ -3346,9 +3367,9 @@ P0 Database Schema
 #47 AI Agent Development Workflow
 ```
 
-However, additive changes may be required in the API/backend implementation to support the approved mobile onboarding flow.
+However, additive API/backend implementation support is required for the approved mobile onboarding flow.
 
-### 36.3 Owner-Approved Decisions Causing Revision Impact
+### 36.3 Owner-Approved Decisions Causing Cross-Document Impact
 
 The following Owner-approved decisions are now part of P1-2 mobile implementation scope:
 
@@ -3387,9 +3408,9 @@ The following Owner-approved decisions are now part of P1-2 mobile implementatio
 24. Web App is moved to P1-3.
 ```
 
-### 36.4 Required P0 API Revision Impact
+### 36.4 P0 API Dependency Impact
 
-The P0 API Specification must be revised or patched to support:
+P1-2 depends on P0 API support for:
 
 ```text
 POST /api/v1/auth/register
@@ -3405,9 +3426,9 @@ Create Farm permission for self-registered owner
 Structured farm location or approved location storage strategy
 ```
 
-### 36.5 Required P1-1 Backend Revision Impact
+### 36.5 P1-1 Backend Dependency Impact
 
-The P1-1 Backend Implementation Specification must be revised or patched to support:
+P1-2 depends on P1-1 Backend support for:
 
 ```text
 Auth registration service
@@ -3429,24 +3450,15 @@ No consultation entity
 
 ### 36.6 Freeze Rule
 
-P1-2 must not be frozen until one of the following is true:
+P1-2 may be frozen only after confirming that the required additive revisions are already accepted in the affected documents.
+
+For the current freeze review, the required revision dependencies are considered resolved if P0 API and P1-1 Backend revision notes have been merged or approved by Owner.
+
+Current status:
 
 ```text
-Option A:
-P0 API and P1-1 Backend are revised to include the required changes.
-
-Option B:
-Owner explicitly approves P1-2 Freeze with backend/API revision pending,
-and the pending items are recorded as required pre-coding blockers.
-```
-
-Recommended status before coding:
-
-```text
-P1-2 Mobile App Implementation Specification v1.0
-Status: Draft Revised
-Backend/API Revision Required
-Freeze Readiness: Not Yet
+Revision dependencies confirmed.
+P1-2 Freeze Readiness: Ready for Owner Freeze Approval.
 ```
 
 ### 36.7 No Architecture Redesign
@@ -3473,23 +3485,80 @@ Desktop app
 Web app implementation inside P1-2
 ```
 
-### 36.8 Required Resolution Before Freeze
+### 36.8 Freeze Confirmation Checklist
 
 Before P1-2 Freeze, the following must be confirmed:
 
 ```text
-[ ] P0 API register endpoint accepted.
-[ ] Phone-number login accepted.
-[ ] farmer_status accepted.
-[ ] membership_status accepted.
-[ ] Owner organization assignment accepted.
-[ ] Family/Staff join by Farm ID accepted.
-[ ] Farm ID validation accepted.
-[ ] Minimal membership storage accepted.
-[ ] Create Farm authorization for self-registered owner accepted.
-[ ] Farm location storage strategy accepted.
-[ ] P1-1 Backend patch accepted.
+[ ] P0 API register endpoint confirmed.
+[ ] Phone-number login confirmed.
+[ ] farmer_status confirmed.
+[ ] membership_status confirmed.
+[ ] Owner organization assignment confirmed.
+[ ] Family/Staff join by Farm ID confirmed.
+[ ] Farm ID validation confirmed.
+[ ] Minimal membership storage confirmed.
+[ ] Create Farm authorization for self-registered owner confirmed.
+[ ] Farm location storage strategy confirmed.
+[ ] P1-1 Backend patch confirmed.
 [ ] No new RBAC role introduced.
 [ ] No permission service introduced.
 [ ] No new registry entity introduced.
 ```
+
+### 36.9 Final Freeze Readiness Statement
+
+This P1-2 Mobile App Implementation Specification is ready for Owner Freeze Approval because it:
+
+```text
+Aligns with P0 Domain Model
+Aligns with P0 Database Schema
+Aligns with P0 API additive revision
+Aligns with P1-1 Backend additive revision
+Preserves One Platform / One Mobile App / One Backend / One Database
+Does not introduce forbidden entities, services, roles, registries, or architecture changes
+Keeps Web App in P1-3
+Keeps Desktop App out of scope
+```
+
+Recommended final status after Owner approval:
+
+```text
+Status: FROZEN
+Freeze Date: <Owner approval date>
+```
+**************
+Freeze
+**************
+
+ARI V1 — P1-2 Mobile App Implementation Specification v1.0
+Status: FROZEN
+Freeze confirmed by Owner
+
+สรุป Freeze Boundary ที่ล็อกแล้ว:
+
+- Android / iOS only
+- Flutter Mobile App
+- Web App ไปทำใน P1-3
+- Desktop App out of scope
+- Phone self-registration
+- Phone-number login
+- farmer_status: owner / owner_family / farm_staff
+- Owner มีหลาย Farm ได้
+- Family / Staff join by Farm ID
+- First-time permission setup
+- Offline-first capture
+- Ask AI = external consultation flow
+- Consultation = Notebook Entry Type
+- QR = Representation only
+- No permission service
+- No new RBAC role
+- No qr_registry
+- No consultation entity
+
+ต่อจากนี้ถ้ามีการเปลี่ยนแปลง P1-2 ต้องทำผ่าน:
+
+Revision Proposal
+→ Review
+→ Approval
+→ New Version
