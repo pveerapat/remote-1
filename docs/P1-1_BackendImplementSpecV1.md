@@ -2175,292 +2175,462 @@ P1-1 Freeze complete.
 2026-06-18
 ************************
 
-Revision Note — ARI V1 P0 API Specification v1.0
-1. Revision Purpose
+# Additive Revision — ARI V1 P1-1 Backend Implementation Specification v1.0
 
-This revision note records required API changes caused by Owner-approved P1-2 mobile onboarding decisions.
+## Revision Status
 
-This note does not replace the full P0 API Specification.
+Document: ARI V1 — P1-1 Backend Implementation Specification v1.0
+Revision Type: Additive Revision
+Status: FROZEN
+Purpose: Support Owner-approved P1-2 Mobile App onboarding decisions
+Freeze Authority: Project Owner Confirmed
 
-This note identifies additive API changes that must be merged into the P0 API Specification before P1-2 Freeze or before mobile coding starts.
+This additive revision is appended to the already frozen P1-1 Backend Implementation Specification v1.0.
 
-2. Revision Scope
+This revision does not replace P1-1.
+
+This revision does not redesign ARI.
+
+This revision must be implemented as additive backend changes only.
+
+---
+
+## 1. Revision Purpose
+
+This revision records backend implementation changes required by Owner-approved P1-2 Mobile App onboarding decisions.
+
+The purpose is to support:
+
+```text
+Mobile self-registration
+Phone-based login
+Owner onboarding
+Owner family / farm staff onboarding
+Farm ID-based join flow
+Pending farm approval
+Farm location capture
+```
+
+This revision must remain consistent with:
+
+```text
+P0 Domain Model
+P0 Database Schema
+P0 API Specification
+P1-1 Backend Implementation Specification v1.0
+```
+
+---
+
+## 2. Affected Backend Areas
 
 This revision affects:
 
-Authentication API
-User API
-Organization assignment
-Farm API
-Farm join / membership status
-Farm location payload
+```text
+auth module
+users model/schema/service
+organizations service
+farms service
+RBAC dependency guards
+database migration
+API schemas
+tests
+```
 
-This revision must not affect:
+This revision does not affect:
 
-Notebook Entry API structure
-Note Item API structure
-Consultation as Notebook Entry Type
+```text
+notebook entry core behavior
+note item timeline behavior
+consultation as entry_type
 QR as representation
-MinIO upload endpoints
-Sync batch endpoint
-Notification API
-Follow-up API
-3. New / Revised Authentication API
-3.1 Register
+upload endpoints
+sync batch endpoint
+follow-up logic
+notification core logic
+RBAC dependency guard principle
+```
 
-Add:
+---
 
+## 3. Additive Auth Module Revision
+
+### 3.1 Add Register Endpoint
+
+Add endpoint:
+
+```text
 POST /api/v1/auth/register
+```
 
-Purpose:
+This endpoint is additive.
 
-Allow new mobile users to self-register from Android/iOS app.
+It does not replace existing login behavior.
 
-Request:
+It does not introduce a new user entity.
 
-{
-  "phone": "0812345678",
-  "name": "Somchai",
-  "password": "1234",
-  "farmer_status": "owner",
-  "farm_id": null
-}
+It does not introduce a separate mobile user table.
 
-For Owner's Family / Farm Staff:
+### Backend Responsibilities
 
-{
-  "phone": "0812345678",
-  "name": "Worker Name",
-  "password": "1234",
-  "farmer_status": "farm_staff",
-  "farm_id": "ARI-FARM-A123"
-}
+The backend must:
 
-Allowed farmer_status values:
+```text
+Normalize phone number
+Validate phone uniqueness
+Validate farmer_status
+Validate Farm ID when farmer_status is owner_family or farm_staff
+Hash password
+Create user
+Assign role = farmer
+Create or assign organization_id for owner
+Resolve organization_id from Farm ID for owner_family/farm_staff
+Return access_token and refresh_token after successful registration
+```
 
-owner
-owner_family
-farm_staff
+### Required Rule
 
-Rules:
+Registration must return:
 
-Registration requires internet.
-Phone number must be unique.
-Phone number must be normalized before storage.
-Password must be stored only as password_hash.
-Default password 1234 is allowed only for P0 pilot.
-role must be assigned as farmer.
-3.2 Register Response
+```text
+access_token
+refresh_token
+```
 
-For owner:
+after successful registration.
 
-{
-  "user_id": "uuid",
-  "phone": "0812345678",
-  "role": "farmer",
-  "farmer_status": "owner",
-  "organization_id": "uuid",
-  "account_status": "active_pending_verification",
-  "access_token": "jwt",
-  "refresh_token": "jwt"
-}
+This supports mobile onboarding continuation without requiring immediate manual login after registration.
 
-For owner_family / farm_staff:
+---
 
-{
-  "user_id": "uuid",
-  "phone": "0812345678",
-  "role": "farmer",
-  "farmer_status": "farm_staff",
-  "organization_id": "uuid",
-  "primary_farm_id": "ARI-FARM-A123",
-  "membership_status": "pending_farm_approval",
-  "access_token": "jwt",
-  "refresh_token": "jwt"
-}
+## 4. Phone Login Revision
 
-If backend chooses not to return tokens after registration, it must return a clear response requiring login.
+Existing email login may remain if already implemented.
 
-3.3 Login
+P1-2 requires phone login.
 
-Existing login must be revised to accept phone number.
+### Backend Login Logic
 
-POST /api/v1/auth/login
+The backend must:
 
-Request:
+```text
+Normalize phone
+Find user by phone
+Verify password_hash
+Check account_status
+Check membership_status if required
+Issue access_token
+Issue refresh_token
+```
 
-{
-  "phone": "0812345678",
-  "password": "1234"
-}
+### Security Rules
 
-Response:
+Do not store:
 
-{
-  "access_token": "jwt",
-  "refresh_token": "jwt",
-  "token_type": "bearer"
-}
+```text
+plain password
+plain token
+password in logs
+token in logs
+```
 
-Rules:
+---
 
-Login by email may remain supported if already implemented.
-Phone-number login is required for P1-2 mobile.
-Backend must look up user by normalized phone.
-Backend must verify password_hash.
-3.4 Current User
+## 5. Auth / Me Response Revision
+
+Endpoint:
+
+```text
 GET /api/v1/auth/me
+```
 
-Response must include:
+must include:
 
-{
-  "user_id": "uuid",
-  "phone": "0812345678",
-  "name": "Somchai",
-  "role": "farmer",
-  "farmer_status": "owner",
-  "organization_id": "uuid",
-  "primary_farm_id": null,
-  "membership_status": "active",
-  "account_status": "active"
-}
-4. User Model API Additions
+```text
+user_id
+phone
+name
+role
+farmer_status
+organization_id
+primary_farm_id
+membership_status
+account_status
+```
 
-The user API must support or expose:
+This response supports mobile onboarding, farm context selection, and pending approval UX.
 
+---
+
+## 6. Additive User Model Revision
+
+Additive user fields may include:
+
+```text
 phone
 farmer_status
 membership_status
 primary_farm_id
 account_status
+```
 
-Recommended additive fields:
+### 6.1 phone
 
-users.phone unique
-users.farmer_status nullable
-users.membership_status nullable
-users.primary_farm_id nullable
-users.account_status
+```text
+phone unique
+```
 
-This is an additive change.
+Phone must be normalized before storage and lookup.
 
-Do not create:
-
-member_registry
-owner_registry
-farmer_registry
-separate mobile_user table
-permission table
-5. Owner Registration Behavior
-
-When farmer_status = owner:
-
-Backend creates user_id.
-Backend assigns role = farmer.
-Backend creates or assigns organization_id immediately.
-Backend returns organization_id.
-Backend allows owner to create Farm under own organization.
-Account may be marked active_pending_verification or pending_review.
-Admin may later suspend/revoke if false registration is detected.
-
-Owner may have multiple farms:
-
-organization_id
-  ├── farm_id_1
-  ├── farm_id_2
-  └── farm_id_3
-6. Owner's Family / Farm Staff Registration Behavior
-
-When farmer_status = owner_family or farm_staff:
-
-farm_id is required.
-Backend validates Farm ID exists.
-Backend resolves farm_id → organization_id.
-Backend creates user_id.
-Backend assigns role = farmer.
-Backend sets primary_farm_id = provided farm_id.
-Backend sets membership_status = pending_farm_approval.
-User must not be able to create Farm/Zone/Tree.
-
-Required pending message:
-
-ส่งคำขอเข้าร่วมสวนแล้ว
-กรุณารอเจ้าของสวนหรือผู้ดูแลระบบอนุมัติ
-7. Membership Status
+### 6.2 farmer_status
 
 Allowed values:
 
+```text
+owner
+owner_family
+farm_staff
+```
+
+Required rule:
+
+```text
+farmer_status is not an RBAC role.
+```
+
+farmer_status represents onboarding / farm relationship status only.
+
+RBAC role remains one of the frozen roles:
+
+```text
+farmer
+ari_staff
+farm_coordinator
+agronomist
+reviewer
+admin
+root
+```
+
+### 6.3 membership_status
+
+Allowed values:
+
+```text
 pending_farm_approval
 active
 rejected
 suspended
 revoked
+```
 
-Behavior:
+### 6.4 account_status
 
-pending_farm_approval:
-  user registered but not yet approved for farm access
+Allowed values:
 
-active:
-  user can access approved farm scope
+```text
+active
+active_pending_verification
+pending_review
+suspended
+rejected
+revoked
+```
 
-rejected:
-  join request rejected
+### 6.5 primary_farm_id
 
-suspended:
-  access temporarily blocked
+```text
+primary_farm_id nullable
+```
 
-revoked:
-  access removed
-8. Farm API Revision
+Used for owner_family and farm_staff registration flow.
 
-Existing Farm API must allow self-registered owner to create farm under own organization.
+It must reference an existing farm when provided.
 
-POST /api/v1/farms
+---
 
-Required request:
+## 7. Explicit Non-Entities
 
-{
-  "farm_name": "สวนทุเรียนคลองสิบ",
-  "location": {
-    "province": "จันทบุรี",
-    "district": "ท่าใหม่",
-    "subdistrict": "เขาบายศรี",
-    "address": "ใกล้วัด เข้าซอย 2 กม.",
-    "gps_latitude": 12.345678,
-    "gps_longitude": 102.345678,
-    "source": "device_gps"
-  },
-  "description": "สวนหลักของครอบครัว"
-}
+This revision must not create:
 
-Only farm_name is required from user in P1-2.
+```text
+owner_registry
+member_registry
+farmer_registry
+separate mobile users table
+permission service
+permission table
+qr_registry
+consultation table
+location table
+```
 
-System-generated:
+All changes must remain within existing frozen entities or approved additive fields.
 
-farm_id
-farm_code
-organization_id
-created_by_user_id
-status
-created_at
+---
 
-Owner must not manually provide:
+## 8. Owner Registration Backend Flow
 
-farm_id
-organization_id
-created_by_user_id
-status
-9. Farm Location Storage
+When:
 
-Backend must choose and document one approved strategy.
+```text
+farmer_status = owner
+```
 
-Recommended:
+Backend must:
 
-farms.location = structured JSON/object
+```text
+Create user
+Assign role = farmer
+Create or assign organization_id immediately
+Set account_status = active_pending_verification
+Set membership_status = active
+Return organization_id
+Return access_token and refresh_token
+Allow user to proceed to Create Farm
+```
 
-Supported structure:
+### Owner Rules
 
+```text
+Owner may create multiple farms under the same organization.
+Owner can only manage own organization scope.
+Owner cannot access other organizations.
+Owner cannot create admin/root/ari_staff users.
+```
+
+### Organization Rule
+
+Owner is represented by:
+
+```text
+Organization
+```
+
+Do not create Owner Registry.
+
+---
+
+## 9. Owner Family / Farm Staff Registration Backend Flow
+
+When:
+
+```text
+farmer_status = owner_family
+```
+
+or:
+
+```text
+farmer_status = farm_staff
+```
+
+Backend must:
+
+```text
+Require Farm ID
+Validate Farm ID exists
+Resolve organization_id from Farm ID
+Create user
+Assign role = farmer
+Set primary_farm_id = Farm ID
+Set membership_status = pending_farm_approval
+Set account_status = active
+Return access_token and refresh_token
+Restrict farm access until approved
+```
+
+### Access Before Approval
+
+Until approval, backend must block:
+
+```text
+Farm notebook access
+Farm-scoped upload/sync
+Farm/Zone/Tree creation
+Farm data read access
+```
+
+Backend may allow:
+
+```text
+profile read
+logout
+status refresh
+```
+
+### Required Rule
+
+Mobile visibility is not authorization.
+
+Backend remains the source of authorization truth.
+
+---
+
+## 10. Farm Authorization Revision
+
+Existing Farm API must allow:
+
+```text
+self-registered owner
+```
+
+to create farms under their own organization.
+
+### Farm Rules
+
+```text
+Owner can create multiple farms.
+Owner cannot create farms under another organization.
+Owner_family cannot create farms.
+Farm_staff cannot create farms.
+Owner_family cannot create zones.
+Farm_staff cannot create zones.
+Owner_family cannot create trees.
+Farm_staff cannot create trees.
+```
+
+Authorization must use:
+
+```text
+existing RBAC dependency guards
+organization scope
+farm scope
+membership_status
+account_status
+```
+
+Do not add permission service.
+
+Do not add permission table.
+
+---
+
+## 11. Farm Location Implementation
+
+Backend must support one approved location storage strategy.
+
+### Approved Additive Strategy
+
+If `farms.location` does not exist in the frozen P0 database schema, add:
+
+```text
+farms.location nullable JSONB
+```
+
+through an approved additive migration.
+
+Do not create:
+
+```text
+location table
+farm_location table
+geo registry
+```
+
+### Supported JSON Structure
+
+```json
 {
   "province": "จันทบุรี",
   "district": "ท่าใหม่",
@@ -2470,40 +2640,279 @@ Supported structure:
   "gps_longitude": 102.345678,
   "source": "device_gps"
 }
+```
 
-Alternative:
+### Required Rule
 
-If farms.location is text only, mobile may serialize location summary into location/description only if explicitly approved.
-10. Farm Join Approval
+Farm location is an attribute of:
+
+```text
+farms
+```
+
+not a new domain entity.
+
+---
+
+## 12. Membership Approval Backend Policy
 
 P1-2 minimal policy:
 
-Admin / ARI Staff handles approval through backend/admin workflow.
-Owner self-approval screen is Future Enhancement.
+```text
+Admin / ARI Staff approves or rejects pending_farm_approval users through existing backend/admin workflow.
+Owner self-approval screen is not required in P1-2.
+```
 
-No P1-2 requirement for:
+### Supported Status Transitions
 
-Owner-managed member approval screen
-Invite code
-farm_memberships table
-multi-farm membership management
-11. P0 API Non-Changes
+```text
+pending_farm_approval → active
+pending_farm_approval → rejected
+active → suspended
+active → revoked
+suspended → active
+```
 
-Do not change:
+### Transition Authorization
 
-Consultation = Notebook Entry Type
+Allowed transition roles:
+
+```text
+admin
+root
+ari_staff if explicitly permitted
+```
+
+### Required Rule
+
+Use existing RBAC dependency guards.
+
+Do not add:
+
+```text
+permission service
+permission table
+approval service
+member registry
+```
+
+---
+
+## 13. Database Migration Notes
+
+Required additive migrations may include:
+
+```text
+users.phone unique index
+users.farmer_status
+users.membership_status
+users.primary_farm_id
+users.account_status
+farms.location nullable JSONB
+```
+
+If existing fields already support these requirements, document mapping instead of adding duplicates.
+
+### Migration Rules
+
+```text
+Additive only
+No destructive migration
+No new domain entity
+No permission service table
+No qr_registry
+No consultation table
+No owner registry
+No member registry
+No farmer registry
+No location table
+```
+
+---
+
+## 14. Backend API Schema Notes
+
+### Register Request
+
+Required fields should support:
+
+```text
+phone
+name
+password
+farmer_status
+farm_id when farmer_status is owner_family or farm_staff
+```
+
+### Register Response
+
+Must return:
+
+```text
+access_token
+refresh_token
+user
+```
+
+User response must include:
+
+```text
+user_id
+phone
+name
+role
+farmer_status
+organization_id
+primary_farm_id
+membership_status
+account_status
+```
+
+### Login Request
+
+P1-2 requires phone login:
+
+```text
+phone
+password
+```
+
+### Login Response
+
+Must return:
+
+```text
+access_token
+refresh_token
+user
+```
+
+---
+
+## 15. Backend Tests Required
+
+Add tests for:
+
+```text
+register owner success
+register owner creates/assigns organization_id
+register owner phone uniqueness
+register owner password is hashed
+register owner returns access_token and refresh_token
+login by phone
+auth/me includes farmer_status and membership_status
+auth/me includes account_status and primary_farm_id
+register owner_family with valid Farm ID
+register farm_staff with valid Farm ID
+register family/staff with invalid Farm ID rejected
+pending_farm_approval blocks farm data access
+pending_farm_approval allows profile read
+pending_farm_approval allows logout
+pending_farm_approval allows status refresh
+owner can create multiple farms under own organization
+owner cannot create farm under another organization
+owner_family cannot create farm/zone/tree
+farm_staff cannot create farm/zone/tree
+admin can approve/reject membership
+admin can suspend/revoke account
+upload/sync still requires valid auth and organization scope
+upload/sync blocked for pending_farm_approval when farm-scoped
+no qr_registry module exists
+no consultation module exists
+no permission service exists
+no owner_registry exists
+no member_registry exists
+no location table exists
+```
+
+---
+
+## 16. Backend Non-Changes
+
+This revision must not change:
+
+```text
 QR = Representation only
 No qr_registry
-No consultation entity
+Consultation = Notebook Entry Type
+No consultation entity/module/service/router
+RBAC = FastAPI dependency guards
 No permission service
-Upload endpoints:
-  POST /api/v1/files/upload-url
-  POST /api/v1/files/complete
-Sync endpoint:
-  POST /api/v1/sync/batch
-Follow-up periods:
-  3 / 7 / 14 days
-Outcome values:
-  improved / same / worse / unknown
-Search:
-  keyword/filter search only
+Upload flow via MinIO presigned URL
+Notebook Entry / Note Item core model
+Offline sync batch endpoint
+Follow-up logic
+Notification logic
+```
+
+---
+
+## 17. Relationship to P1-1 Frozen Specification
+
+This additive revision extends P1-1 only in the following areas:
+
+```text
+auth registration
+phone login
+user onboarding fields
+owner organization assignment
+family/staff farm join status
+farm authorization during onboarding
+farm location attribute
+membership approval status transitions
+tests
+```
+
+It does not change the frozen P1-1 architecture.
+
+It does not change the frozen P1-1 non-goals.
+
+It does not introduce new backend service boundaries.
+
+---
+
+## 18. Freeze Boundary
+
+After this additive revision is frozen:
+
+No implementation may introduce:
+
+```text
+New domain entity
+New registry table
+New permission service
+New permission table
+New QR table
+New consultation table
+New owner table
+New member table
+New location table
+New role
+New mobile app
+New backend service
+Microservice split
+```
+
+Any further change must go through:
+
+```text
+Revision Proposal
+→ Review
+→ Approval
+→ New Version
+```
+
+---
+
+## 19. Final Status
+
+ARI V1 — P1-1 Backend Implementation Specification v1.0
+Additive Revision for P1-2 Mobile Onboarding Support
+
+Status:
+
+```text
+FROZEN
+```
+
+This additive revision is approved to be appended to the frozen P1-1 Backend Implementation Specification v1.0.
