@@ -1,4 +1,3 @@
-แก้ 2 จุดแล้วครับ: ลบ fallback `unscoped/users/...` และลบ `Admin-only maintenance commands` ออกจาก Optional Extension
 
 # ARI V1 — P1-1 Backend Implementation Specification v1.0
 

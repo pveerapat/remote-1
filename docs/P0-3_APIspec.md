@@ -2804,3 +2804,809 @@ P0-3 API Specification
 ******************************
 2026-06-19 
 ******************************
+
+# Revision Note — ARI V1 P0 API Specification Additive Revision v1.1
+
+## 1. Revision Purpose
+
+This revision note records additive API changes required by Owner-approved P1-2 Mobile App onboarding decisions.
+
+This revision does not replace:
+
+```text
+ARI V1 — P0 API Specification v1.0
+```
+
+This revision extends the existing API specification only where required for mobile onboarding.
+
+---
+
+# 2. Revision Scope
+
+## Affected API Areas
+
+```text
+Authentication API
+User API
+Organization Assignment
+Farm API
+Farm Join / Membership Status
+Farm Location Payload
+```
+
+## Unaffected API Areas
+
+This revision must not change:
+
+```text
+Notebook Entry API structure
+Note Item API structure
+Consultation as Notebook Entry Type
+QR as representation
+MinIO upload endpoints
+Sync batch endpoint
+Notification API
+Follow-up API
+Keyword/filter search only
+```
+
+---
+
+# 3. Authentication API Additions
+
+## 3.1 Add Register Endpoint
+
+### Method
+
+```http
+POST
+```
+
+### Path
+
+```text
+/api/v1/auth/register
+```
+
+### Purpose
+
+Allow new Android/iOS mobile users to self-register.
+
+Registration requires internet connection.
+
+---
+
+## 3.2 Register Request — Owner
+
+```json
+{
+  "phone": "0812345678",
+  "name": "Somchai",
+  "password": "1234",
+  "farmer_status": "owner",
+  "farm_id": null
+}
+```
+
+---
+
+## 3.3 Register Request — Owner Family / Farm Staff
+
+```json
+{
+  "phone": "0812345678",
+  "name": "Worker Name",
+  "password": "1234",
+  "farmer_status": "farm_staff",
+  "farm_id": "ARI-FARM-A123"
+}
+```
+
+---
+
+## 3.4 Allowed farmer_status Values
+
+```text
+owner
+owner_family
+farm_staff
+```
+
+---
+
+## 3.5 Register Validation Rules
+
+```text
+phone required
+phone must be normalized before lookup/storage
+phone must be unique
+name required
+password required
+farmer_status required
+farmer_status must be valid
+farm_id required when farmer_status = owner_family
+farm_id required when farmer_status = farm_staff
+farm_id must exist when provided
+password must be stored only as password_hash
+role must be assigned as farmer
+```
+
+Default password:
+
+```text
+1234
+```
+
+is allowed only for P0 pilot.
+
+---
+
+## 3.6 Register Response — Owner
+
+```json
+{
+  "user_id": "uuid",
+  "phone": "0812345678",
+  "role": "farmer",
+  "farmer_status": "owner",
+  "organization_id": "uuid",
+  "account_status": "active_pending_verification",
+  "access_token": "jwt",
+  "refresh_token": "jwt"
+}
+```
+
+---
+
+## 3.7 Register Response — Owner Family / Farm Staff
+
+```json
+{
+  "user_id": "uuid",
+  "phone": "0812345678",
+  "role": "farmer",
+  "farmer_status": "farm_staff",
+  "organization_id": "uuid",
+  "primary_farm_id": "ARI-FARM-A123",
+  "membership_status": "pending_farm_approval",
+  "access_token": "jwt",
+  "refresh_token": "jwt"
+}
+```
+
+---
+
+## 3.8 Alternative Register Response
+
+If backend does not issue tokens immediately after registration:
+
+```json
+{
+  "user_id": "uuid",
+  "phone": "0812345678",
+  "role": "farmer",
+  "farmer_status": "owner",
+  "organization_id": "uuid",
+  "requires_login": true,
+  "message": "Registration completed. Please login."
+}
+```
+
+---
+
+## 3.9 Register Error Responses
+
+```text
+400 invalid request
+401 not applicable
+403 registration not allowed
+404 farm_id not found
+409 phone already exists
+422 validation error
+500 server error
+```
+
+---
+
+# 4. Login API Revision
+
+## Existing Endpoint
+
+```http
+POST /api/v1/auth/login
+```
+
+## Revised Request
+
+```json
+{
+  "phone": "0812345678",
+  "password": "1234"
+}
+```
+
+## Response
+
+```json
+{
+  "access_token": "jwt",
+  "refresh_token": "jwt",
+  "token_type": "bearer"
+}
+```
+
+## Login Rules
+
+```text
+Phone-number login is required for P1-2 mobile.
+Email login may remain supported if already implemented.
+Backend must normalize phone before lookup.
+Backend must find user by normalized phone.
+Backend must verify password_hash.
+Backend must check account_status.
+Backend must check membership_status when farm access is required.
+```
+
+## Security Rules
+
+Do not store or log:
+
+```text
+plain password
+plain token
+password in logs
+token in logs
+```
+
+---
+
+# 5. Current User API Revision
+
+## Existing Endpoint
+
+```http
+GET /api/v1/auth/me
+```
+
+## Revised Response
+
+```json
+{
+  "user_id": "uuid",
+  "phone": "0812345678",
+  "name": "Somchai",
+  "role": "farmer",
+  "farmer_status": "owner",
+  "organization_id": "uuid",
+  "primary_farm_id": null,
+  "membership_status": "active",
+  "account_status": "active"
+}
+```
+
+## Rules
+
+The response must expose mobile onboarding state so the app can decide:
+
+```text
+Can access farm
+Must wait for approval
+Can create farm
+Must complete setup
+Account blocked
+```
+
+Mobile visibility is not authorization.
+
+Backend remains authorization source of truth.
+
+---
+
+# 6. User API Additive Fields
+
+User API responses may expose:
+
+```text
+phone
+farmer_status
+membership_status
+primary_farm_id
+account_status
+```
+
+## Non-Change
+
+Do not create APIs for:
+
+```text
+/member-registry
+/owner-registry
+/farmer-registry
+/mobile-users
+/permissions
+```
+
+---
+
+# 7. Owner Registration API Behavior
+
+When:
+
+```text
+farmer_status = owner
+```
+
+Backend must:
+
+```text
+Create user_id
+Assign role = farmer
+Create or assign organization_id immediately
+Return organization_id
+Set membership_status = active
+Set account_status = active_pending_verification or pending_review
+Allow owner to create farm under own organization
+```
+
+Owner may create multiple farms:
+
+```text
+organization_id
+ ├── farm_id_1
+ ├── farm_id_2
+ └── farm_id_3
+```
+
+## Authorization Rules
+
+Owner must not:
+
+```text
+Access other organizations
+Create farms under another organization
+Create admin/root/ari_staff users
+```
+
+---
+
+# 8. Owner Family / Farm Staff Registration API Behavior
+
+When:
+
+```text
+farmer_status = owner_family
+```
+
+or:
+
+```text
+farmer_status = farm_staff
+```
+
+Backend must:
+
+```text
+Require farm_id
+Validate farm_id exists
+Resolve farm_id → organization_id
+Create user_id
+Assign role = farmer
+Set primary_farm_id = provided farm_id
+Set membership_status = pending_farm_approval
+Restrict farm access until approved
+```
+
+## Pending Approval Message
+
+Mobile may display:
+
+```text
+ส่งคำขอเข้าร่วมสวนแล้ว
+กรุณารอเจ้าของสวนหรือผู้ดูแลระบบอนุมัติ
+```
+
+## Pending Access Restrictions
+
+Until approved, backend must block:
+
+```text
+Farm notebook access
+Farm-scoped upload/sync
+Farm/Zone/Tree creation
+Farm data read access
+```
+
+Backend may allow:
+
+```text
+profile read
+logout
+status refresh
+```
+
+---
+
+# 9. Membership Status API Interpretation
+
+Allowed values:
+
+```text
+pending_farm_approval
+active
+rejected
+suspended
+revoked
+```
+
+## Behavior
+
+### pending_farm_approval
+
+User registered but not yet approved for farm access.
+
+### active
+
+User can access approved farm scope.
+
+### rejected
+
+Join request rejected.
+
+### suspended
+
+Access temporarily blocked.
+
+### revoked
+
+Access removed.
+
+---
+
+# 10. Farm API Revision
+
+## Existing Endpoint
+
+```http
+POST /api/v1/farms
+```
+
+## Revised Purpose
+
+Allow self-registered owner to create farms under own organization.
+
+---
+
+## Revised Request
+
+```json
+{
+  "farm_name": "สวนทุเรียนคลองสิบ",
+  "location": {
+    "province": "จันทบุรี",
+    "district": "ท่าใหม่",
+    "subdistrict": "เขาบายศรี",
+    "address": "ใกล้วัด เข้าซอย 2 กม.",
+    "gps_latitude": 12.345678,
+    "gps_longitude": 102.345678,
+    "source": "device_gps"
+  },
+  "description": "สวนหลักของครอบครัว"
+}
+```
+
+## Required From User
+
+```text
+farm_name
+```
+
+## Optional From User
+
+```text
+location
+description
+```
+
+## System Generated
+
+```text
+farm_id
+farm_code
+organization_id
+created_by_user_id
+status
+created_at
+```
+
+## Owner Must Not Manually Provide
+
+```text
+farm_id
+organization_id
+created_by_user_id
+status
+```
+
+---
+
+# 11. Farm Create Authorization Rules
+
+## Owner
+
+May create multiple farms under own organization.
+
+## Owner Family
+
+Must not create:
+
+```text
+Farm
+Zone
+Tree
+```
+
+## Farm Staff
+
+Must not create:
+
+```text
+Farm
+Zone
+Tree
+```
+
+## Backend Rule
+
+Mobile UI visibility is not authorization.
+
+Backend must enforce all restrictions.
+
+---
+
+# 12. Farm Location Payload
+
+API must support structured location object.
+
+## Supported Structure
+
+```json
+{
+  "province": "จันทบุรี",
+  "district": "ท่าใหม่",
+  "subdistrict": "เขาบายศรี",
+  "address": "ใกล้วัด เข้าซอย 2 กม.",
+  "gps_latitude": 12.345678,
+  "gps_longitude": 102.345678,
+  "source": "device_gps"
+}
+```
+
+## Rules
+
+```text
+province optional
+district optional
+subdistrict optional
+address optional
+gps_latitude optional
+gps_longitude optional
+source optional
+```
+
+If gps_latitude is provided:
+
+```text
+must be valid latitude
+```
+
+If gps_longitude is provided:
+
+```text
+must be valid longitude
+```
+
+---
+
+# 13. Farm Join Approval API Policy
+
+P1-2 minimal policy:
+
+```text
+Admin / ARI Staff handles approval through backend/admin workflow.
+Owner self-approval screen is Future Enhancement.
+```
+
+## No P1-2 Requirement For
+
+```text
+Owner-managed member approval screen
+Invite code
+farm_memberships table
+multi-farm membership management
+```
+
+## Minimal Approval Endpoint
+
+If API support is required, use existing User API pattern:
+
+```http
+PATCH /api/v1/users/{user_id}
+```
+
+with:
+
+```json
+{
+  "membership_status": "active"
+}
+```
+
+or:
+
+```json
+{
+  "membership_status": "rejected"
+}
+```
+
+## Approval Authorization
+
+Allowed:
+
+```text
+admin
+root
+ari_staff
+```
+
+if explicitly permitted.
+
+Do not create:
+
+```text
+/farm-memberships
+/join-requests
+/permissions
+```
+
+---
+
+# 14. Status Transition Rules
+
+Allowed membership_status transitions:
+
+```text
+pending_farm_approval → active
+pending_farm_approval → rejected
+active → suspended
+active → revoked
+suspended → active
+```
+
+Invalid transitions should return:
+
+```text
+409 Conflict
+```
+
+---
+
+# 15. P0 API Non-Changes
+
+This revision must not change:
+
+```text
+Consultation = Notebook Entry Type
+QR = Representation only
+No qr_registry
+No consultation entity
+No permission service
+Upload endpoints unchanged
+Sync batch endpoint unchanged
+Follow-up API unchanged
+Notification API unchanged
+Keyword/filter search only
+```
+
+## Upload Endpoints Unchanged
+
+```http
+POST /api/v1/files/upload-url
+POST /api/v1/files/complete
+POST /api/v1/files/upload-failed
+```
+
+## Sync Endpoint Unchanged
+
+```http
+POST /api/v1/sync/batch
+```
+
+## Follow-Up Rules Unchanged
+
+Periods:
+
+```text
+3
+7
+14
+```
+
+Outcomes:
+
+```text
+improved
+same
+worse
+unknown
+```
+
+---
+
+# 16. Implementation Dependency Notice
+
+This API revision depends on additive support from:
+
+```text
+P0 Domain Model Additive Revision
+P0 Database Schema Additive Revision
+P1-1 Backend Implementation
+P1-2 Mobile App Implementation
+```
+
+This document does not define those revisions.
+
+This document only defines the API-level additive changes.
+
+---
+
+# 17. Revision Status
+
+```text
+ARI V1 — P0 API Specification v1.0
+Status: Frozen
+
+ARI V1 — P0 API Specification Additive Revision v1.1
+Status: Ready for Owner Review
+```
+
+If approved and merged:
+
+```text
+ARI V1 — P0 API Specification v1.1
+Status: Ready for Freeze Review
+```
+
+---
+
+# 18. Final Consistency Statement
+
+This additive API revision remains within the approved ARI constraints:
+
+```text
+One Platform
+One Backend
+One Database Architecture
+One Mobile App
+One Web App
+One Domain Model
+One RBAC System
+```
+
+It does not introduce:
+
+```text
+Owner Registry
+Member Registry
+Farmer Registry
+Separate Mobile User Table
+Permission Table
+QR Registry
+Consultation Entity
+Farm Membership Table
+Knowledge API
+Robot API
+Commerce API
+```
+
+This revision only extends authentication, user state exposure, farm creation behavior, and mobile onboarding API support.
