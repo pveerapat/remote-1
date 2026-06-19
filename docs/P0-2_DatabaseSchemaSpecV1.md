@@ -793,3 +793,247 @@ PostgreSQL
 MinIO
 
 และเชื่อมต่อกับ P0 Domain Model + P0 Database Schema ที่ Frozen แล้ว.
+
+
+*****************************
+ีupdate 2026-06-19
+*****************************
+
+# ARI V1 — P0 Database Schema Additive Revision v1.1
+
+## Revision Purpose
+
+This revision records additive schema changes required by the approved P1-2 Mobile Onboarding Specification.
+
+This revision does not replace P0 Database Schema v1.0.
+
+All changes are additive.
+
+No destructive migration is allowed.
+
+---
+
+# Affected Tables
+
+```text
+users
+farms (optional location enhancement)
+```
+
+---
+
+# Users Table Additions
+
+## phone
+
+```sql
+phone VARCHAR(30) NULL
+```
+
+Rules:
+
+```text
+Required for newly registered users.
+
+Legacy users may remain NULL.
+```
+
+Unique Index:
+
+```sql
+CREATE UNIQUE INDEX uq_users_phone_active
+ON users(phone)
+WHERE phone IS NOT NULL
+AND deleted_at IS NULL;
+```
+
+---
+
+## farmer_status
+
+```sql
+farmer_status_enum
+```
+
+Values:
+
+```text
+owner
+owner_family
+farm_staff
+```
+
+Column:
+
+```sql
+farmer_status farmer_status_enum NULL
+```
+
+---
+
+## membership_status
+
+```sql
+membership_status_enum
+```
+
+Values:
+
+```text
+pending_farm_approval
+active
+rejected
+suspended
+revoked
+```
+
+Column:
+
+```sql
+membership_status membership_status_enum NULL
+```
+
+Index:
+
+```sql
+CREATE INDEX idx_users_membership_status
+ON users(membership_status);
+```
+
+---
+
+## account_status
+
+```sql
+account_status_enum
+```
+
+Values:
+
+```text
+active
+active_pending_verification
+pending_review
+suspended
+rejected
+revoked
+```
+
+Column:
+
+```sql
+account_status account_status_enum NULL
+```
+
+Index:
+
+```sql
+CREATE INDEX idx_users_account_status
+ON users(account_status);
+```
+
+---
+
+## primary_farm_id
+
+```sql
+primary_farm_id UUID NULL
+```
+
+Foreign Key:
+
+```sql
+REFERENCES farms(id)
+```
+
+---
+
+## registered_at
+
+```sql
+registered_at TIMESTAMPTZ NULL
+```
+
+Purpose:
+
+```text
+Stores onboarding registration timestamp.
+```
+
+---
+
+# Farm Location Enhancement
+
+## location
+
+```sql
+location JSONB NULL
+```
+
+Recommended structure:
+
+```json
+{
+  "province": "",
+  "district": "",
+  "subdistrict": "",
+  "address": "",
+  "gps_latitude": 0,
+  "gps_longitude": 0,
+  "source": "device_gps"
+}
+```
+
+Notes:
+
+```text
+location_text remains unchanged.
+
+No existing column is removed.
+```
+
+---
+
+# Migration Rules
+
+```text
+Additive Only
+
+No Table Removal
+
+No Column Removal
+
+No Entity Renaming
+
+No Foreign Key Removal
+
+No Breaking Change
+```
+
+---
+
+# Explicit Non-Changes
+
+Do not create:
+
+```text
+owner_registry
+member_registry
+farmer_registry
+farm_memberships
+permission_tables
+consultations
+qr_registry
+```
+
+---
+
+# Revision Status
+
+```text
+Additive Database Revision
+
+No Breaking Change
+
+Ready For Review
+```
