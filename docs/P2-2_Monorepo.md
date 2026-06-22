@@ -2528,49 +2528,6 @@ Status:
 
 ```text
 ARI V1 — P2-2 Monorepo & Local Development Setup v1.0
-Status: Ready for Owner Review
-```
-*************************************
-
-ok, freeze P2-2
-
-**************************************
-Memory updated
-Thought for a couple of seconds
-
-รับทราบครับ
-
-ARI V1 — P2-2 Monorepo & Local Development Setup v1.0
 Status: FROZEN
 Freeze Confirmation: APPROVED BY OWNER
-
-ต่อจากนี้ให้ถือว่า P2-2 เป็น Frozen Source of Truth สำหรับ monorepo และ local development setup แล้ว
-
-Freeze boundary ของ P2-2 คือ:
-
-ทำได้:
-- monorepo root structure
-- backend/ mobile/ web/
-- local Docker stack
-- FastAPI backend skeleton
-- GET /health
-- GET /api/v1/health
-- .env.example
-- README
-- AGENTS.md / CLAUDE.md / CODEX.md
-- Git workflow
-- smoke test checklist
-ห้ามทำใน P2-2:
-- feature backend APIs
-- database migrations จริง
-- auth / phone login
-- farm / zone / tree APIs
-- notebook / upload / sync
-- mobile screens
-- web pages
-- production deployment
-- new architecture / new services / new entities
-
-เอกสารถัดไปตามลำดับคือ:
-
-ARI V1 — P2-3 Backend Feature Foundation v1.0
+*******************************************
