@@ -145,3 +145,198 @@ VS Code หรือ Cursor
 + Kiro ใช้เฉพาะแปลง spec เป็น task/test
 
 ยังไม่ควรเริ่มด้วย Antigravity 2.0 แบบ multi-agent เต็มรูปแบบจนกว่า repo, Docker, tests, และ CI foundation จะนิ่งแล้ว.
+
+
+****************************
+
+คำถาม
+1.แล้วเราจะเริ่มใช้ claude code ไป coding ตอนไหน ? ต้องทำขั้นตอนยังงัย ? ทำเอกสาร P2-1 ถึง P2-10 ให้เสร็จค่อยใช้ claude code หรือ ทำเอกสารแต่ละอัน Frozen แล้ว เอาไปใส่ให้ claude code ทำ ใน vs code ทีละอัน
+
+คำตอบหลักคือ: ไม่ต้องรอทำ P2-1 ถึง P2-10 ให้ครบก่อนครับ ควรใช้ Claude Code แบบ “ทีละเอกสารที่ Freeze แล้ว” โดยเริ่มได้ตั้งแต่ P2-2 หลัง Freeze. ผมจะตรวจ current workflow ของ Claude Code ให้สอดคล้องกับการใช้งานจริงก่อนสรุปขั้นตอน.
+
+Thought for 17s
+
+ไม่ต้องทำเอกสาร P2-1 ถึง P2-10 ให้เสร็จก่อน ครับ
+
+วิธีที่ถูกต้องสำหรับ ARI คือ:
+
+Freeze เอกสารทีละขั้น
+↓
+ให้ Claude Code ทำ coding เฉพาะ scope ของเอกสารนั้น
+↓
+ตรวจ diff / test / commit
+↓
+ค่อยทำเอกสารถัดไป
+ควรเริ่มใช้ Claude Code ตอนไหน
+
+เริ่มใช้ Claude Code ได้หลังจาก:
+
+ARI V1 — P2-2 Monorepo & Local Development Setup v1.0
+Status: FROZEN
+
+เพราะ P2-2 คือเอกสารที่บอกว่า repo ต้องมีโครงสร้างอะไร, Docker local stack ต้องมีอะไร, health endpoint คืออะไร, .env.example ต้องมีอะไร, และ guardrail files ต้องเขียนอย่างไร
+
+ดังนั้น Claude Code งานแรกจริงๆ คือ implement P2-2 ไม่ใช่รอ P2-10
+
+Workflow ที่แนะนำ
+Step 1 — ทำ P2-2 ให้ Freeze ก่อน
+
+ตอนนี้เรามี prompt สำหรับทำ P2-2 แล้ว ให้เปิด new chat แล้วสร้างเอกสาร:
+
+ARI V1 — P2-2 Monorepo & Local Development Setup v1.0
+
+ตรวจให้เรียบร้อย แล้ว Freeze
+
+Step 2 — สร้าง repo จริง
+
+หลัง P2-2 Freeze ให้สร้าง local repo ใน VS Code:
+
+mkdir ari
+cd ari
+git init
+code .
+
+จากนั้นใส่เอกสารลง repo:
+
+docs/frozen/
+docs/execution/
+
+อย่างน้อยต้องมี:
+
+docs/execution/ARI-V1-P2-1-Coding-Execution-Plan.md
+docs/execution/ARI-V1-P2-2-Monorepo-Local-Development-Setup.md
+Step 3 — สร้าง guardrail files ก่อนให้ AI coding
+
+ต้องมีไฟล์พวกนี้ก่อน:
+
+AGENTS.md
+CLAUDE.md
+CODEX.md
+
+ในนั้นต้องเขียนกฎ ARI เช่น:
+
+Do not redesign ARI.
+Do not add new architecture.
+Do not add new database tables.
+Do not create QR registry.
+Do not create consultation entity.
+Do not create farm_memberships.
+Do not create permission service.
+Follow P2-1 and P2-2.
+If missing, mark API Gap / Revision Proposal.
+
+ไฟล์พวกนี้สำคัญมาก เพราะ Claude Code จะอ่าน context จาก repo และใช้กติกาใน project files เป็นแนวทางทำงานได้ Claude Code ถูกออกแบบให้ทำงานใน project directory, อ่านไฟล์ใน codebase, แก้ไฟล์, รันคำสั่ง terminal และช่วยงาน Git ได้ผ่าน natural language commands.
+
+Step 4 — ติดตั้ง Claude Code
+
+ติดตั้ง Claude Code ในเครื่อง coding หลักก่อน ถ้าใช้ Linux / macOS / WSL:
+
+curl -fsSL https://claude.ai/install.sh | bash
+
+ถ้าใช้ Windows PowerShell:
+
+irm https://claude.ai/install.ps1 | iex
+
+เอกสารทางการของ Claude Code ระบุว่าเริ่มใช้งานด้วย claude ใน project directory และ login ผ่าน browser ในครั้งแรก.
+
+Step 5 — ใช้ใน VS Code
+
+ใช้ได้ 2 แบบ:
+
+1. เปิด VS Code แล้วใช้ terminal รัน claude
+2. ติดตั้ง Claude Code extension ใน VS Code
+
+Claude Code for VS Code สามารถทำงานใน IDE, อ่าน/แก้ code, รัน terminal command โดยขอ permission และรู้ context จากไฟล์ที่เปิดหรือ selection ใน editor ได้.
+
+ผมแนะนำเริ่มแบบนี้ก่อน:
+
+VS Code + Terminal Claude Code
+
+ยังไม่ต้องใช้หลาย agent พร้อมกัน
+
+วิธีให้ Claude Code ทำงานแต่ละรอบ
+
+ใช้ branch แยกเสมอ:
+
+git checkout -b feature/p2-2-monorepo-setup
+claude
+
+แล้วให้ prompt แบบแคบ:
+
+Read AGENTS.md, CLAUDE.md, docs/execution/ARI-V1-P2-1-Coding-Execution-Plan.md, and docs/execution/ARI-V1-P2-2-Monorepo-Local-Development-Setup.md.
+
+Implement only P2-2 scope.
+
+Create the monorepo structure, root files, backend initial skeleton, docker-compose local stack, .env.example, and health endpoints exactly as specified.
+
+Do not implement auth, database migrations, Farm APIs, Notebook APIs, mobile screens, or web pages.
+
+Do not add new architecture or forbidden services.
+
+After changes, show changed files and commands to test.
+
+Claude Code จะ propose changes และขอ approval ก่อนแก้ไฟล์ตาม workflow ทางการ.
+
+หลัง Claude Code ทำเสร็จ ให้สั่ง:
+
+Show git diff.
+Run local smoke test.
+Do not commit until I approve.
+
+จากนั้นคุณตรวจเอง แล้วค่อย commit:
+
+git status
+git diff
+git add .
+git commit -m "chore: initialize ARI V1 monorepo foundation"
+
+Claude Code เองก็ช่วยดู Git status, สร้าง branch, commit message, resolve conflicts ได้ แต่ผมแนะนำให้คุณเป็นคน approve commit เองในช่วงแรก.
+
+แล้ว P2-3 ถึง P2-10 ทำยังไง
+
+ทำแบบเดียวกันทีละเอกสาร:
+
+P2-2 Freeze → Claude Code implement P2-2
+P2-3 Freeze → Claude Code implement P2-3
+P2-4 Freeze → Claude Code implement P2-4
+P2-5 Freeze → Claude Code implement P2-5
+...
+
+ไม่ควรทำ:
+
+เขียน P2-1 ถึง P2-10 ให้ครบทั้งหมดก่อน แล้วค่อย code
+
+เพราะจะช้าเกิน และพอเริ่ม code จริงอาจเจอปัญหา repo/Docker/schema ที่ต้องแก้เร็ว
+
+ไม่ควรทำ:
+
+ให้ Claude Code implement หลาย phase พร้อมกัน
+
+เพราะเสี่ยงหลุด Frozen scope
+
+สรุปคำตอบตรงๆ
+
+คำตอบของข้อ 1:
+
+เริ่มใช้ Claude Code หลัง P2-2 Freeze
+
+คำตอบของข้อ 2:
+
+ไม่ต้องรอ P2-1 ถึง P2-10 เสร็จทั้งหมด
+ให้ Freeze ทีละเอกสาร แล้วเอาเอกสารนั้นไปให้ Claude Code ทำใน VS Code ทีละ scope
+
+ลำดับที่ถูกต้องตอนนี้คือ:
+
+1. ทำ P2-2 document
+2. Freeze P2-2
+3. เปิด VS Code
+4. สร้าง repo
+5. ใส่ docs/frozen + docs/execution
+6. สร้าง AGENTS.md / CLAUDE.md / CODEX.md
+7. เปิด Claude Code ใน repo
+8. ให้ Claude Code implement เฉพาะ P2-2
+9. ตรวจ diff + smoke test
+10. commit
+11. ค่อยไป P2-3
+
+แนวทางนี้เหมาะกับ ARI ที่ต้องคุม Frozen architecture เข้มที่สุดครับ.
